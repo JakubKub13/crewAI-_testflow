@@ -268,8 +268,20 @@ async def async_kickoff():
         logger.error(f"Error during flow execution: {str(e)}")
         return {"error": str(e)}
 
+async def generate_flow_plot():
+    """Generate and save a visualization plot of the flow"""
+    # Create flow instance
+    flow = IntentNotIdentifiedFlow()
+    
+    # Generate and save the flow plot
+    flow.plot("intent_not_identified_flow_plot")
+    
+    print("Flow plot successfully generated and saved to 'intent_not_identified_flow_plot.html'")
+
 if __name__ == "__main__":
-    asyncio.run(async_kickoff())
+    asyncio.run(generate_flow_plot())
+    # or
+    # asyncio.run(async_kickoff())
 
 
 
