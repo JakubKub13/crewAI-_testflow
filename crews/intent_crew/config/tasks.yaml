@@ -9,7 +9,9 @@ analyze_intent:
     3. Provide a confidence score for your assessment (0.0 to 1.0)
     
     Input:
-    {email_content}
+    Subject: {email_content.subject}
+    Body: {email_content.body}
+    Sender: {email_content.sender}
   expected_output: >
     A JSON object with three fields:
     - can_prepare_general_answer (boolean): Whether a general answer can be prepared
@@ -29,7 +31,9 @@ retrieve_information:
     {analysis_results}
     
     Original email:
-    {email_content}
+    Subject: {email_content.subject}
+    Body: {email_content.body}
+    Sender: {email_content.sender}
   expected_output: >
     A comprehensive list of relevant information items retrieved from the knowledge base,
     organized by topic and relevance to the query.

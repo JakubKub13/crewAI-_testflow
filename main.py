@@ -54,11 +54,16 @@ class IntentNotIdentifiedFlow(Flow[IntentState]):
         
         try:
             print('Before execute_task_async for analyze_intent')
+            print(f'Email subject: {self.state.email.subject}')
+            print(f'Email body: {self.state.email.body[:50]}...')
+            print(f'Email context: {{"email_content": {self.state.email.dict()}}}')
+            
             analysis_output = await self.intent_crew.execute_task_async(
                 "analyze_intent",
                 context={"email_content": self.state.email.dict()}
             )
             print('After execute_task_async for analyze_intent')
+            print(f'Analysis output raw: {analysis_output.raw[:100]}...')
             
             # Uložíme celý výstup pre prípadné ďalšie použitie
             self.state.analysis_results = {
@@ -74,21 +79,29 @@ class IntentNotIdentifiedFlow(Flow[IntentState]):
                 json_match = re.search(json_pattern, analysis_output.raw, re.DOTALL)
                 
                 if json_match:
+                    print(f'Found JSON match: {json_match.group(0)[:100]}...')
                     analysis_json = json.loads(json_match.group(0))
                     self.state.analysis_results.update(analysis_json)
                     self.state.can_prepare_info = analysis_json.get("can_prepare_general_answer", False)
+                    print(f'can_prepare_info from JSON: {self.state.can_prepare_info}')
                 else:
                     # Ak sa nenájde JSON, použijeme heuristiku z textu
+                    print('No JSON found, using text heuristic')
                     self.state.can_prepare_info = "can prepare general answer: true" in analysis_output.raw.lower() or "can_prepare_general_answer: true" in analysis_output.raw.lower()
+                    print(f'can_prepare_info from heuristic: {self.state.can_prepare_info}')
                     
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
                 # Ak sa nepodari parsovať JSON, použijeme jednoduchú heuristiku
+                print(f'JSON decode error: {str(e)}')
                 self.state.can_prepare_info = "can prepare general answer: true" in analysis_output.raw.lower() or "can_prepare_general_answer: true" in analysis_output.raw.lower()
+                print(f'can_prepare_info from heuristic after error: {self.state.can_prepare_info}')
             
             logger.info(f"Analysis complete. Can prepare general info: {self.state.can_prepare_info}")
             
         except Exception as e:
             logger.error(f"Error during text analysis: {str(e)}")
+            print(f"EXCEPTION: {str(e)}")
+            print(f"EXCEPTION TYPE: {type(e)}")
             # Fail gracefully in production
             self.state.can_prepare_info = False
             raise
@@ -279,9 +292,9 @@ async def generate_flow_plot():
     print("Flow plot successfully generated and saved to 'intent_not_identified_flow_plot.html'")
 
 if __name__ == "__main__":
-    asyncio.run(generate_flow_plot())
+    # asyncio.run(generate_flow_plot())
     # or
-    # asyncio.run(async_kickoff())
+    asyncio.run(async_kickoff())
 
 
 
